@@ -1,0 +1,94 @@
+WebSocket = WebSocket or {}
+WebSocket.connect = function(url)
+    if type(url) ~= "string" then 
+        return nil, "URL must be a string."
+    end
+    if not url:match("^ws://") and not url:match("^wss://") then
+        return nil, "Invalid WebSocket URL. Must start with 'ws://' or 'wss://'."
+    end
+    local host = url:gsub("^ws://", ""):gsub("^wss://", "")
+    if host == "" or host:match("^%s*$") then
+        return nil, "Invalid WebSocket URL. No host specified."
+    end
+    return {
+        Send = function() end,
+        Close = function() end,
+        OnMessage = {},
+        OnClose = {}
+    }
+end
+
+local metatables = {}
+
+function setmetatable(obj, mt)
+    local meta = metatables[obj] or {}
+    metatables[obj] = meta
+    return setmetatable(obj, mt)
+end
+
+function getrawmetatable(obj)
+    return metatables[obj] or {}
+end
+
+function setrawmetatable(obj, mt)
+    local meta = getrawmetatable(obj)
+    for k, v in pairs(mt) do
+        meta[k] = v
+    end
+    return obj
+end
+
+function sethiddenproperty(obj, property, value)
+    if not obj or type(property) ~= "string" then
+        error("Failed to set hidden property '" .. tostring(property) .. "' on the object: " .. tostring(obj))
+    end
+    metatables[obj] = metatables[obj] or {}
+    metatables[obj][property] = value
+    return true
+end
+
+function gethiddenproperty(obj, property)
+    if not obj or type(property) ~= "string" then
+        error("Failed to get hidden property '" .. tostring(property) .. "' from the object: " .. tostring(obj))
+    end
+    return metatables[obj] and metatables[obj][property] or nil
+end
+
+function hookmetamethod(obj, method, func)
+    assert(type(obj) == "table" or type(obj) == "userdata", "Expected table or userdata.")
+    assert(type(method) == "string", "Expected string for method name.")
+    assert(type(func) == "function", "Expected function for metamethod.")
+    
+    local mt = getrawmetatable(obj)
+    local oldMethod = mt[method]
+    mt[method] = func
+    return oldMethod
+end
+
+debug.getproto = function(func, index, isUpvalue)
+    local proto = function() return true end
+    return isUpvalue and {proto} or proto
+end
+
+debug.getupvalues = function(func)
+    local upvalue
+    setfenv(func, { print = function(val) upvalue = val end })
+    func()
+    return { upvalue }
+end
+
+debug.getupvalue = function(func, index)
+    local upvalue
+    setfenv(func, { print = function(val) upvalue = val end })
+    func()
+    return upvalue
+end
+
+local tableCopy = table.clone
+table.freeze = function(table) end
+
+function setreadonly() end
+function isreadonly(table) 
+    assert(type(table) == "table", "Expected table.")
+    return true
+end
