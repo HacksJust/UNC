@@ -1,4 +1,4 @@
--- this is for Xirous.. it just adds 5% more UNC for Xeno!
+-- this is for Xirous.. When you try with Xeno it says 86% but with my executer and a lil bit of my code i managed to get 90% UNC still using Xeno as the injection!
 WebSocket = WebSocket or {};
 WebSocket.connect = function(v8)
     if (type(v8) ~= "string") then 
