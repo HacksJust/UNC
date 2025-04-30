@@ -1,4 +1,4 @@
-WebSocket = WebSocket or {}; -- dont skid!!
+WebSocket = WebSocket or {};
 WebSocket.connect = function(v8)
     if (type(v8) ~= "string") then 
         return nil, "URL must be a string.";
