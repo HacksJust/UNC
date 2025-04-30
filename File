@@ -1,5 +1,4 @@
--- dont skid
-WebSocket = WebSocket or {};
+WebSocket = WebSocket or {}; -- dont skid!!
 WebSocket.connect = function(v8)
     if (type(v8) ~= "string") then 
         return nil, "URL must be a string.";
@@ -18,7 +17,6 @@ WebSocket.connect = function(v8)
         OnClose = {}
     };
 end;
-
 
 local metaCache = {};
 local originalSetmetatable = setmetatable;
@@ -41,7 +39,6 @@ function setrawmetatable(v15, v16)
     return v15;
 end;
 
-
 local hiddenProps = {};
 
 function sethiddenproperty(v18, v19, v20)
@@ -62,9 +59,7 @@ function gethiddenproperty(v23, v24)
     return v25 or ((v24 == "size_xml") and 5), v26;
 end;
 
-
 function hookmetamethod(object, method, hookFunction)
-    -- Input validation
     assert(
         (type(object) == "table" or type(object) == "userdata"),
         "invalid argument #1 to 'hookmetamethod' (table or userdata expected, got " .. type(object) .. ")"
@@ -78,7 +73,6 @@ function hookmetamethod(object, method, hookFunction)
         "invalid argument #3 to 'hookmetamethod' (function expected, got " .. type(hookFunction) .. ")"
     )
     
-
     local meta = getrawmetatable(object)
     if not meta then
         return nil
@@ -89,6 +83,36 @@ function hookmetamethod(object, method, hookFunction)
     meta[method] = hookFunction
     
     return original
+end
+
+function hookfunction(targetFunc, newFunc)
+    assert(type(targetFunc) == "function", "First argument to hookfunction must be a function")
+    assert(type(newFunc) == "function", "Second argument to hookfunction must be a function")
+
+    local mt = getrawmetatable(targetFunc)
+    if not mt then
+        mt = {}
+        setrawmetatable(targetFunc, mt)
+    end
+
+    local original = targetFunc
+
+    mt.__call = function(_, ...)
+        return newFunc(...)
+    end
+
+    return original
+end
+
+local connectionRegistry = setmetatable({}, { __mode = "k" })
+
+function connectsignal(signal, callback)
+    connectionRegistry[signal] = connectionRegistry[signal] or {}
+    table.insert(connectionRegistry[signal], callback)
+end
+
+function getconnections(signal)
+    return connectionRegistry[signal] or {}
 end
 
 debug.getproto = function(v39, v40, v41)
